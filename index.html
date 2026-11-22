@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sanal Sınıf / Amfi — Kick OBS Overlay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Arka Plan (Sınıf Modunda Görünür, ?bg=transparent ile Gizlenir) -->
+  <div id="classroom-backdrop" class="classroom-backdrop" aria-hidden="true">
+    <div class="wall-upper">
+      <!-- Sol Pencere -->
+      <div class="window window-left">
+        <div class="window-glass">
+          <div class="window-shine"></div>
+        </div>
+        <div class="window-frame-v"></div>
+        <div class="window-frame-h"></div>
+        <div class="window-sill"></div>
+      </div>
+
+      <!-- Orta Pano & Duvar Saati -->
+      <div class="back-wall-center">
+        <div class="wall-banner">
+          <span class="banner-dot"></span>
+          <span id="hall-title" class="banner-text">AMFİ 101</span>
+          <span class="banner-dot"></span>
+        </div>
+        <div class="notice-board">
+          <div class="note note-yellow">!otur</div>
+          <div class="note note-pink">!kalk</div>
+          <div class="note note-blue">Hoş Geldiniz!</div>
+        </div>
+      </div>
+
+      <!-- Sağ Pencere & Saat -->
+      <div class="wall-right-group">
+        <div class="wall-clock" title="Sınıf Saati">
+          <div class="clock-hand clock-hour"></div>
+          <div class="clock-hand clock-minute"></div>
+          <div class="clock-center"></div>
+        </div>
+        <div class="window window-right">
+          <div class="window-glass">
+            <div class="window-shine"></div>
+          </div>
+          <div class="window-frame-v"></div>
+          <div class="window-frame-h"></div>
+          <div class="window-sill"></div>
+        </div>
+      </div>
+    </div>
+    <div class="wall-wainscot"></div>
+    <div class="classroom-floor"></div>
+  </div>
+
+  <!-- Ana Amfi Sahnesi -->
+  <main id="stage" class="stage" aria-label="Sanal Amfi">
+    <div id="amphitheater" class="amphitheater">
+      <!-- Sıralar app.js tarafından dinamik oluşturulur -->
+    </div>
+  </main>
+
+  <!-- Küçük Bilgi Rozeti (İsteğe bağlı, sadece sınıf modunda veya debug'da yararlı) -->
+  <div id="hud-badge" class="hud-badge" aria-live="polite">
+    <span id="hud-status-dot" class="status-dot status-idle"></span>
+    <span id="hud-seat-count">0 / 26</span>
+  </div>
+
+  <!-- Debug / Test Paneli (Sadece ?debug=true parametresi ile görünür) -->
+  <aside id="debug-panel" class="debug-panel hidden" aria-label="Test Paneli">
+    <div class="debug-header">
+      <div class="debug-title">
+        <span id="debug-conn-dot" class="status-dot status-idle"></span>
+        <span>Amfi Test Paneli</span>
+      </div>
+      <button id="btn-toggle-debug" class="debug-icon-btn" title="Küçült / Genişlet">−</button>
+    </div>
+
+    <div id="debug-body" class="debug-body">
+      <div class="debug-meta">
+        <div><strong>Durum:</strong> <span id="debug-conn-text">Bağlı Değil</span></div>
+        <div><strong>Koltuk:</strong> <span id="debug-seat-info">0 / 26</span></div>
+      </div>
+
+      <div class="debug-actions">
+        <button id="btn-sit-random" class="btn btn-primary">Rastgele Kullanıcı Oturt</button>
+        <button id="btn-msg-random" class="btn btn-accent">Rastgele Mesaj Gönder</button>
+        <button id="btn-leave-random" class="btn btn-secondary">Rastgele Kullanıcı Kaldır</button>
+        <button id="btn-clear-all" class="btn btn-danger">Sınıfı Boşalt</button>
+        <button id="btn-toggle-bg" class="btn btn-ghost">Arka Plan: Sınıf / Şeffaf</button>
+      </div>
+
+      <form id="debug-sim-form" class="debug-sim-form">
+        <label class="debug-label">Manuel Chat Simülasyonu</label>
+        <input
+          id="sim-username"
+          type="text"
+          class="debug-input"
+          placeholder="Kullanıcı adı (örn: Ahmet)"
+          value="TestOgrenci"
+          maxlength="30"
+        />
+        <div class="debug-sim-row">
+          <input
+            id="sim-message"
+            type="text"
+            class="debug-input"
+            placeholder="Mesaj (!otur, Selam!, !kalk)"
+            maxlength="200"
+          />
+          <button type="submit" class="btn btn-primary btn-sm">Gönder</button>
+        </div>
+      </form>
+
+      <div id="debug-log" class="debug-log" aria-live="polite"></div>
+    </div>
+  </aside>
+
+  <script src="app.js"></script>
+</body>
+</html>
