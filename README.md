@@ -3,11 +3,11 @@
 Kick.com yayınlarınızda OBS **Browser Source (Tarayıcı Kaynağı)** olarak kullanabileceğiniz, izleyicilerin chat komutlarıyla kademeli bir üniversite amfisine oturup sohbet edebildiği interaktif web projesi.
 
 ## Özellikler
-- **26 Kişilik Kademeli Amfi:** Arkadan öne doğru 4 kademeli sıra (`D: 8`, `C: 7`, `B: 6`, `A: 5`).
+- **14 Kişilik Kademeli Amfi:** Arkadan öne doğru 2 kademeli sıra (`B: 8`, `A: 6`).
 - **Chat Komutları:**
   - `!otur` veya `!dersegir` → Rastgele boş bir koltuğa sevimli bir SVG avatar ile oturur.
   - Normal chat mesajları → Karakterin kafasının üstünde **3 saniye** görünen ve yumuşak `fade-out` ile kaybolan konuşma balonu çıkar (yeni mesaj gelirse süre sıfırlanır, 80 karakterden uzun mesajlar `...` ile kesilir).
-  - `!kalk` veya `!cikis` → Koltuktan kalkar.
+  - `!kalk`, `!cikis` veya `!çıkış` → Koltuktan kalkar.
 - **AFK Sistemi:** 15 dakika boyunca mesaj yazmayan izleyiciler otomatik olarak koltuktan kaldırılır.
 - **Kick Doğrudan WebSocket:** Ekstra backend gerektirmeden doğrudan Kick Pusher WebSocket üzerinden çalışır.
 - **Şeffaf OBS Desteği:** `?bg=transparent` parametresi ile arka plan tamamen şeffaf yapılabilir.
