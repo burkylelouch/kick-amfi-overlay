@@ -3,10 +3,14 @@
 Kick.com yayınlarınızda OBS **Browser Source (Tarayıcı Kaynağı)** olarak kullanabileceğiniz, izleyicilerin chat komutlarıyla kademeli bir üniversite amfisine oturup sohbet edebildiği interaktif web projesi.
 
 ## Özellikler
-- **14 Kişilik Kademeli Amfi:** Arkadan öne doğru 2 kademeli sıra (`B: 8`, `A: 6`).
+- **14 Kişilik 2 Sıralı Kademeli Amfi:** Arkadan öne doğru 2 kademeli sıra (`B: 8`, `A: 6`). Yeni gelen izleyiciler önce ön sıradaki boş koltuklara oturur.
+- **Pixel-Art Karakterler:** 24×24 piksel ızgarasında rastgele üretilen keskin SVG pixel-art avatarlar (çeşitli ten/kıyafet renkleri, 7 farklı saç/şapka stili, gözlük/güneş gözlüğü/kulaklık/allık aksesuarları, göz kırpma ve konuşma animasyonları).
+- **Akıllı Konuşma Balonları:**
+  - Normal chat mesajları karakterin üstünde **3 saniye** görünür ve yumuşak `fade-out` ile kaybolur (yeni mesaj gelirse süre sıfırlanır, 80 karakterden uzun mesajlar `...` ile kesilir).
+  - Yan yana oturan izleyiciler aynı anda mesaj attığında balonlar otomatik olarak birbirinden uzaklaşarak üst üste binmez.
+  - Katman sıralaması sayesinde arka sıradaki kişiler ve balonları ön sıradakilerin önüne geçmez.
 - **Chat Komutları:**
-  - `!otur` veya `!dersegir` → Rastgele boş bir koltuğa sevimli bir SVG avatar ile oturur.
-  - Normal chat mesajları → Karakterin kafasının üstünde **3 saniye** görünen ve yumuşak `fade-out` ile kaybolan konuşma balonu çıkar (yeni mesaj gelirse süre sıfırlanır, 80 karakterden uzun mesajlar `...` ile kesilir).
+  - `!otur` veya `!dersegir` → Boş bir koltuğa pixel-art avatar ile oturur.
   - `!kalk`, `!cikis` veya `!çıkış` → Koltuktan kalkar.
 - **AFK Sistemi:** 15 dakika boyunca mesaj yazmayan izleyiciler otomatik olarak koltuktan kaldırılır.
 - **Kick Doğrudan WebSocket:** Ekstra backend gerektirmeden doğrudan Kick Pusher WebSocket üzerinden çalışır.
@@ -15,12 +19,20 @@ Kick.com yayınlarınızda OBS **Browser Source (Tarayıcı Kaynağı)** olarak 
 
 ---
 
-## Hızlı Test (Tarayıcıda)
-1. Klasördeki `index.html` dosyasını tarayıcınızda açın ve adres çubuğunun sonuna `?debug=true` ekleyin:
+## Çalıştırma (Localhost)
+Proje harici bir paket kurulumu gerektirmeden yerleşik Node.js sunucusuyla `localhost` üzerinden çalışır.
+
+1. Sunucuyu başlatın:
+   - Terminalde:
+     ```bash
+     npm start
+     ```
+     *(veya doğrudan `node server.js`, Windows'ta `baslat.bat` dosyasına çift tıklayabilirsiniz. Farklı port için: `PORT=8080 node server.js`)*
+2. Tarayıcınızda test paneliyle açın:
    ```
-   index.html?debug=true
+   http://localhost:3000/?debug=true
    ```
-2. Sağ üstte açılan **Amfi Test Paneli** üzerinden kullanıcı oturtabilir, rastgele mesaj gönderebilir, manuel `!otur` / `!kalk` simülasyonu yapabilir ve şeffaf/sınıf arka planı arasında geçiş yapabilirsiniz.
+3. Sağ üstte açılan **Amfi Test Paneli** üzerinden kullanıcı oturtabilir, rastgele mesaj gönderebilir, manuel `!otur` / `!kalk` simülasyonu yapabilir ve şeffaf/sınıf arka planı arasında geçiş yapabilirsiniz.
 
 ---
 
@@ -52,18 +64,18 @@ Açılan JSON verisinde `"chatroom": { "id": 1234567, ... }` kısmındaki sayıy
 
 Örnek OBS URL'si:
 ```
-file:///C:/Users/burak/Desktop/yayın%20oyunu/index.html?chatroomId=123456&bg=transparent
+http://localhost:3000/?chatroomId=123456&bg=transparent
 ```
 
 ---
 
 ## OBS Studio'ya Ekleme Adımları
-1. OBS Studio'da **Kaynaklar (Sources)** panelinden **+** simgesine tıklayın ve **Tarayıcı (Browser)** seçin.
-2. Yeni kaynak oluşturun (ör. `Sanal Amfi`).
-3. **Yerel dosya (Local file)** seçeneğini **işaretlemeyin** (URL parametreleri kullanabilmek için URL alanına `file:///` yolu yazmak daha kolaydır) **veya** `app.js` içindeki `CONFIG` değerlerini düzenleyip *Yerel dosya* seçerek `index.html` dosyasını gösterin.
-4. **URL** kısmına şuna benzer bir adres girin:
+1. Önce yerel sunucuyu başlatın (`npm start` veya `baslat.bat`).
+2. OBS Studio'da **Kaynaklar (Sources)** panelinden **+** simgesine tıklayın ve **Tarayıcı (Browser)** seçin.
+3. Yeni kaynak oluşturun (ör. `Sanal Amfi`).
+4. **Yerel dosya (Local file)** seçeneğini **işaretlemeyin** ve **URL** kısmına şuna benzer bir adres girin:
    ```
-   file:///C:/Users/burak/Desktop/yayın%20oyunu/index.html?chatroomId=CHATROOM_ID&bg=transparent
+   http://localhost:3000/?chatroomId=CHATROOM_ID&bg=transparent
    ```
 5. **Genişlik:** `1920`, **Yükseklik:** `1080` (veya sahnenize uygun boyut, ör. `1280x720`) olarak ayarlayın.
 6. **Özel CSS (Custom CSS)** alanındaki varsayılan kodu silmeyin veya boş bırakın (`?bg=transparent` zaten şeffaflığı ayarlar).

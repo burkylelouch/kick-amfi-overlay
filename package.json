@@ -1,0 +1,9 @@
+{
+  "name": "sanal-sinif-amfi",
+  "version": "1.0.0",
+  "description": "Kick.com OBS Browser Source - Sanal Sınıf / Amfi",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

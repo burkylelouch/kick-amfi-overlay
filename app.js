@@ -18,10 +18,8 @@
     // Manuel Chatroom ID (Cloudflare engeline takılırsa buradan veya ?chatroomId=... ile verin)
     CHATROOM_ID: (urlParams.get('chatroomId') || '').trim(),
 
-    // Kick Pusher WebSocket adresi
-    PUSHER_WS_URL:
-      urlParams.get('wsUrl') ||
-      'wss://ws-us2.pusher.com/app/eb1d5f283081a78b932c?protocol=7&client=js&version=8.4.0-rc2&flash=false',
+    // İsteğe bağlı özel WebSocket adresi (varsayılan olarak Kick Centrifugo API'den otomatik alınır)
+    CUSTOM_WS_URL: (urlParams.get('wsUrl') || '').trim(),
 
     // Görünüm ayarları
     BACKGROUND: (urlParams.get('bg') || 'classroom').toLowerCase(), // 'classroom' | 'transparent'
@@ -51,14 +49,15 @@
   // =========================================================================
 
   /**
-   * Kick mesajındaki [emote:12345:KEKW] ifadelerini okunaklı hale getirir
+   * Kick emote'larını ([emote:12345:KEKW] ve :EMOJİ_ADİ: formatı) temizler
    * ve uzun mesajları 80 karakterde "..." ile keser.
    */
   function formatChatMessage(rawContent) {
     if (!rawContent || typeof rawContent !== 'string') return '';
 
     const cleaned = rawContent
-      .replace(/\[emote:\d+:([^\]]+)\]/g, ':$1:')
+      .replace(/\[emote:\d+:[^\]]+\]/g, ' ')
+      .replace(/(?:^|\s)(?::[^\s:]+:)+(?=\s|$)/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
 
@@ -862,24 +861,21 @@
   }
 
   // =========================================================================
-  // 5. KICK CHAT BAĞLANTISI (PUSHER WEBSOCKET)
+  // 5. KICK CHAT BAĞLANTISI (YEREL SUNUCU SSE -> KICK CENTRIFUGO KÖPRÜSÜ)
   // =========================================================================
   class KickChatClient {
     constructor({ onMessage, onStatus }) {
       this.onMessage = onMessage;
       this.onStatus = onStatus;
-      this.ws = null;
+      this.eventSource = null;
       this.chatroomId = null;
-      this.reconnectAttempts = 0;
-      this.pingInterval = null;
-      this.reconnectTimer = null;
       this.stopped = false;
     }
 
     async start() {
       if (CONFIG.CHATROOM_ID) {
         this.chatroomId = CONFIG.CHATROOM_ID;
-        this.connectWebSocket();
+        this.connectStream();
         return;
       }
 
@@ -891,20 +887,36 @@
 
       this.setStatus('connecting', `${CONFIG.CHANNEL_NAME} kanalı bulunuyor...`);
       try {
-        const res = await fetch(
-          `https://kick.com/api/v2/channels/${encodeURIComponent(CONFIG.CHANNEL_NAME)}`
-        );
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
+        const encoded = encodeURIComponent(CONFIG.CHANNEL_NAME);
+        const endpoints =
+          window.location.protocol === 'http:' || window.location.protocol === 'https:'
+            ? [`/api/channel/${encoded}`, `https://kick.com/api/v2/channels/${encoded}`]
+            : [`https://kick.com/api/v2/channels/${encoded}`];
+
+        let data = null;
+        let lastErr = null;
+        for (const url of endpoints) {
+          try {
+            const res = await fetch(url);
+            if (!res.ok) {
+              throw new Error(`HTTP ${res.status}`);
+            }
+            data = await res.json();
+            break;
+          } catch (e) {
+            lastErr = e;
+          }
         }
-        const data = await res.json();
+        if (!data) {
+          throw lastErr || new Error('Kanal bilgisi alınamadı');
+        }
         const id = data?.chatroom?.id;
         if (!id) {
           throw new Error('chatroom.id bulunamadı');
         }
         this.chatroomId = String(id);
         logDebug(`Chatroom ID otomatik alındı: ${this.chatroomId}`);
-        this.connectWebSocket();
+        this.connectStream();
       } catch (err) {
         this.setStatus('error', 'API engellendi — chatroomId gerekli');
         logDebug(
@@ -913,119 +925,57 @@
       }
     }
 
-    connectWebSocket() {
+    connectStream() {
       if (this.stopped || !this.chatroomId) return;
 
-      this.cleanupSocket();
+      this.cleanupStream();
       this.setStatus('connecting', `Bağlanıyor (Oda: ${this.chatroomId})...`);
 
-      try {
-        this.ws = new WebSocket(CONFIG.PUSHER_WS_URL);
-      } catch (err) {
-        this.setStatus('error', 'WebSocket başlatılamadı');
-        this.scheduleReconnect();
-        return;
-      }
+      const streamUrl = `/api/chat-stream?chatroomId=${encodeURIComponent(this.chatroomId)}`;
+      this.eventSource = new EventSource(streamUrl);
 
-      this.ws.addEventListener('open', () => {
-        logDebug('Pusher WebSocket açıldı.');
-        this.reconnectAttempts = 0;
-
-        // Periyodik ping gönder (OBS Chromium bağlantıyı uyutmasın)
-        this.pingInterval = setInterval(() => {
-          if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-            this.ws.send(JSON.stringify({ event: 'pusher:ping', data: {} }));
-          }
-        }, 30000);
-      });
-
-      this.ws.addEventListener('message', (event) => {
-        this.handleRawFrame(event.data);
-      });
-
-      this.ws.addEventListener('close', () => {
-        this.setStatus('error', 'Bağlantı koptu, yeniden bağlanılıyor...');
-        this.scheduleReconnect();
-      });
-
-      this.ws.addEventListener('error', () => {
-        logDebug('WebSocket bağlantı hatası oluştu.');
-      });
-    }
-
-    handleRawFrame(rawData) {
-      let frame;
-      try {
-        frame = JSON.parse(rawData);
-      } catch {
-        return;
-      }
-
-      const eventName = frame.event;
-
-      if (eventName === 'pusher:connection_established') {
-        const channel = `chatrooms.${this.chatroomId}.v2`;
-        this.ws.send(
-          JSON.stringify({
-            event: 'pusher:subscribe',
-            data: { auth: '', channel },
-          })
-        );
-        logDebug(`Kanala abone olunuyor: ${channel}`);
-        return;
-      }
-
-      if (eventName === 'pusher_internal:subscription_succeeded') {
-        this.setStatus('connected', `Bağlı (Oda: ${this.chatroomId})`);
-        logDebug('Kick chat bağlantısı hazır!');
-        return;
-      }
-
-      if (eventName === 'pusher:ping') {
-        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-          this.ws.send(JSON.stringify({ event: 'pusher:pong', data: {} }));
-        }
-        return;
-      }
-
-      if (eventName === 'App\\Events\\ChatMessageEvent') {
-        let payload;
+      this.eventSource.addEventListener('status', (event) => {
         try {
-          payload = typeof frame.data === 'string' ? JSON.parse(frame.data) : frame.data;
-        } catch {
-          return;
-        }
-
-        const username = payload?.sender?.username;
-        const color = payload?.sender?.identity?.color || '';
-        const content = payload?.content || '';
-
-        if (username && typeof content === 'string') {
-          this.onMessage({ username, color, content });
-        }
-      }
-    }
-
-    scheduleReconnect() {
-      this.cleanupSocket();
-      if (this.stopped) return;
-
-      this.reconnectAttempts += 1;
-      const delay = Math.min(30000, 2000 * Math.pow(2, this.reconnectAttempts - 1));
-      logDebug(`${Math.round(delay / 1000)} sn sonra yeniden bağlanılacak...`);
-      this.reconnectTimer = setTimeout(() => this.connectWebSocket(), delay);
-    }
-
-    cleanupSocket() {
-      clearInterval(this.pingInterval);
-      clearTimeout(this.reconnectTimer);
-      if (this.ws) {
-        try {
-          this.ws.close();
+          const data = JSON.parse(event.data);
+          this.setStatus(data.state || 'idle', data.text || '');
         } catch {
           // yoksay
         }
-        this.ws = null;
+      });
+
+      this.eventSource.addEventListener('log', (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.text) logDebug(data.text);
+        } catch {
+          // yoksay
+        }
+      });
+
+      this.eventSource.addEventListener('message', (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data && data.username && typeof data.content === 'string') {
+            this.onMessage(data);
+          }
+        } catch {
+          // yoksay
+        }
+      });
+
+      this.eventSource.addEventListener('error', () => {
+        this.setStatus('error', 'Yerel sunucu akışı koptu, yeniden bağlanılıyor...');
+      });
+    }
+
+    cleanupStream() {
+      if (this.eventSource) {
+        try {
+          this.eventSource.close();
+        } catch {
+          // yoksay
+        }
+        this.eventSource = null;
       }
     }
 
@@ -1104,10 +1054,10 @@
 
   // Gelen Chat Mesajlarını İşle
   function handleChatMessage({ username, color, content }) {
-    const trimmed = content.trim();
+    const trimmed = content.replace(/[\u200B-\u200D\uFEFF\u034F]/g, '').trim();
     if (!trimmed) return;
 
-    const firstWord = trimmed.split(/\s+/)[0].toLowerCase();
+    const firstWord = trimmed.split(/\s+/)[0].toLocaleLowerCase('tr-TR');
 
     // !otur / !dersegir
     if (CONFIG.SIT_COMMANDS.includes(firstWord)) {
