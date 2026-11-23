@@ -315,7 +315,7 @@ body.bg-transparent .hud-badge {
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  gap: clamp(10px, 1.8vh, 24px);
+  gap: clamp(18px, 3.2vh, 42px);
 }
 
 /* Her bir kademeli sıra: ön sıralar her zaman arka sıraların önünde kalır */
@@ -417,8 +417,8 @@ body.bg-transparent .hud-badge {
 
 .seat {
   position: relative;
-  width: clamp(82px, 8.8vw, 132px);
-  height: clamp(88px, 11.8vh, 134px);
+  width: clamp(94px, 10.2vw, 152px);
+  height: clamp(104px, 14.5vh, 164px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -459,8 +459,8 @@ body.bg-transparent .hud-badge {
 /* Avatar Kapsayıcı */
 .avatar-slot {
   position: relative;
-  width: 78%;
-  height: 82%;
+  width: 84%;
+  height: 86%;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -471,7 +471,9 @@ body.bg-transparent .hud-badge {
   width: 100%;
   height: 100%;
   overflow: visible;
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
+  shape-rendering: crispEdges;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.32));
   transform-origin: center bottom;
 }
 

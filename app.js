@@ -39,12 +39,10 @@
     AFK_TIMEOUT_MS: Math.max(1, Number(urlParams.get('afk')) || 15) * 60 * 1000,
     AFK_CHECK_INTERVAL_MS: 15 * 1000,
 
-    // Kademeli amfi sırası düzeni (arkadan öne toplam 26 koltuk)
+    // Kademeli amfi sırası düzeni (arkadan öne 2 sıra, toplam 14 koltuk)
     ROWS: [
-      { label: 'D', seats: 8, width: '98%' },
-      { label: 'C', seats: 7, width: '90%' },
-      { label: 'B', seats: 6, width: '81%' },
-      { label: 'A', seats: 5, width: '71%' },
+      { label: 'B', seats: 8, width: '96%' },
+      { label: 'A', seats: 6, width: '80%' },
     ],
   };
 
@@ -114,98 +112,183 @@
   }
 
   // =========================================================================
-  // 3. SEVİMLİ SVG AVATAR ÜRETİCİSİ
+  // 3. PİKSEL-ART SVG AVATAR ÜRETİCİSİ (24x24 Izgara)
   // =========================================================================
   const AvatarGenerator = (() => {
-    const SKIN_TONES = ['#FFDFC4', '#F5CBA7', '#E6B08A', '#C68642', '#8D5524'];
+    const OUTLINE = '#181825';
+
+    const SKIN_TONES = [
+      { base: '#FFDFC4', shadow: '#E8B896' },
+      { base: '#F5CBA7', shadow: '#D8A27A' },
+      { base: '#E6B08A', shadow: '#C48A62' },
+      { base: '#C68642', shadow: '#9E652B' },
+      { base: '#8D5524', shadow: '#6B3E17' },
+    ];
+
     const HAIR_COLORS = [
-      '#2C222B',
-      '#4A312C',
-      '#7B4B2A',
-      '#D4A359',
-      '#B83B2A',
-      '#3B5998',
-      '#9B5DE5',
-      '#EC4899',
-      '#E2E8F0',
+      { base: '#2D2A3A', shadow: '#1C1A26', highlight: '#4B4661' },
+      { base: '#593A2E', shadow: '#3D261D', highlight: '#7A5344' },
+      { base: '#8A5430', shadow: '#633A1E', highlight: '#AD7047' },
+      { base: '#E2B45C', shadow: '#BA8B38', highlight: '#F7D388' },
+      { base: '#C43E32', shadow: '#912920', highlight: '#E56357' },
+      { base: '#3B69B5', shadow: '#264882', highlight: '#6392DE' },
+      { base: '#9B5DE5', shadow: '#7138B8', highlight: '#BE8DF7' },
+      { base: '#EC4899', shadow: '#BD2B73', highlight: '#F77EBA' },
+      { base: '#D8E0EB', shadow: '#A8B4C4', highlight: '#FFFFFF' },
     ];
+
     const SHIRT_COLORS = [
-      '#3B82F6',
-      '#EF4444',
-      '#10B981',
-      '#F59E0B',
-      '#8B5CF6',
-      '#EC4899',
-      '#14B8A6',
-      '#F97316',
-      '#6366F1',
-      '#84CC16',
+      { base: '#3B82F6', shadow: '#2563EB', accent: '#DBEAFE' },
+      { base: '#EF4444', shadow: '#C82323', accent: '#FEE2E2' },
+      { base: '#10B981', shadow: '#059669', accent: '#D1FAE5' },
+      { base: '#F59E0B', shadow: '#D97706', accent: '#FEF3C7' },
+      { base: '#8B5CF6', shadow: '#6D28D9', accent: '#EDE9FE' },
+      { base: '#EC4899', shadow: '#BE185D', accent: '#FCE7F3' },
+      { base: '#14B8A6', shadow: '#0F766E', accent: '#CCFBF1' },
+      { base: '#F97316', shadow: '#C2410C', accent: '#FFEDD5' },
+      { base: '#6366F1', shadow: '#4338CA', accent: '#E0E7FF' },
+      { base: '#84CC16', shadow: '#4D7C0F', accent: '#ECFCCB' },
     ];
-    const HAIR_STYLES = ['short', 'bob', 'spiky', 'bun', 'curly', 'beanie'];
-    const ACCESSORIES = ['none', 'none', 'none', 'glasses', 'headphones', 'blush'];
+
+    const HAIR_STYLES = ['short', 'bob', 'spiky', 'bun', 'curly', 'beanie', 'cap'];
+    const ACCESSORIES = ['none', 'none', 'glasses', 'sunglasses', 'headphones', 'blush'];
+
+    function px(x, y, w, h, fill, opacity) {
+      const op = opacity !== undefined ? ` opacity="${opacity}"` : '';
+      return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}"${op} />`;
+    }
 
     function randomSpec() {
       return {
         skin: pickRandom(SKIN_TONES),
-        hairColor: pickRandom(HAIR_COLORS),
-        shirtColor: pickRandom(SHIRT_COLORS),
+        hair: pickRandom(HAIR_COLORS),
+        shirt: pickRandom(SHIRT_COLORS),
         hairStyle: pickRandom(HAIR_STYLES),
         accessory: pickRandom(ACCESSORIES),
       };
     }
 
-    function renderHairBack(style, color) {
+    function renderHairBack(style, hair) {
       if (style === 'bob') {
-        return `<rect x="24" y="24" width="52" height="38" rx="18" fill="${color}" />`;
+        return [
+          px(4, 7, 16, 10, OUTLINE),
+          px(5, 8, 14, 8, hair.shadow),
+          px(5, 8, 2, 7, hair.base),
+          px(17, 8, 2, 7, hair.base),
+        ].join('');
       }
       if (style === 'bun') {
-        return `
-          <circle cx="50" cy="11" r="11" fill="${color}" />
-          <ellipse cx="50" cy="30" rx="26" ry="20" fill="${color}" />
-        `;
+        return [
+          px(9, 0, 6, 4, OUTLINE),
+          px(10, 1, 4, 3, hair.base),
+          px(10, 1, 2, 1, hair.highlight),
+          px(10, 3, 4, 1, '#F472B6'),
+        ].join('');
       }
       if (style === 'curly') {
-        return `
-          <circle cx="26" cy="28" r="10" fill="${color}" />
-          <circle cx="74" cy="28" r="10" fill="${color}" />
-          <circle cx="24" cy="40" r="9" fill="${color}" />
-          <circle cx="76" cy="40" r="9" fill="${color}" />
-        `;
+        return [
+          px(4, 4, 16, 10, OUTLINE),
+          px(3, 6, 18, 6, OUTLINE),
+          px(5, 5, 14, 8, hair.shadow),
+          px(4, 7, 16, 5, hair.base),
+        ].join('');
       }
       return '';
     }
 
-    function renderHairFront(style, color) {
+    function renderHairFront(style, hair) {
       switch (style) {
         case 'short':
-          return `
-            <path d="M26 36 C26 16, 74 16, 74 36 C68 27, 58 24, 50 25 C40 24, 31 28, 26 36 Z" fill="${color}" />
-          `;
+          return [
+            px(7, 3, 10, 2, OUTLINE),
+            px(6, 4, 12, 4, OUTLINE),
+            px(7, 4, 10, 3, hair.base),
+            px(6, 5, 12, 3, hair.base),
+            px(8, 4, 4, 1, hair.highlight),
+            px(6, 7, 2, 3, hair.base),
+            px(16, 7, 2, 3, hair.base),
+            px(8, 7, 3, 1, hair.shadow),
+            px(13, 7, 2, 1, hair.shadow),
+          ].join('');
         case 'bob':
-          return `
-            <path d="M24 38 C24 15, 76 15, 76 38 C70 28, 60 25, 48 27 C36 28, 29 32, 24 38 Z" fill="${color}" />
-          `;
+          return [
+            px(6, 3, 12, 2, OUTLINE),
+            px(5, 4, 14, 4, OUTLINE),
+            px(6, 4, 12, 3, hair.base),
+            px(7, 4, 5, 1, hair.highlight),
+            px(6, 7, 12, 1, hair.base),
+            px(9, 7, 2, 1, hair.shadow),
+            px(14, 7, 2, 1, hair.shadow),
+            px(5, 7, 2, 8, hair.base),
+            px(17, 7, 2, 8, hair.base),
+            px(5, 14, 2, 1, hair.shadow),
+            px(17, 14, 2, 1, hair.shadow),
+          ].join('');
         case 'spiky':
-          return `
-            <path d="M26 35 L29 19 L39 24 L48 12 L57 23 L68 16 L73 35 C65 27, 35 27, 26 35 Z" fill="${color}" />
-          `;
+          return [
+            px(7, 2, 2, 2, OUTLINE),
+            px(11, 1, 3, 3, OUTLINE),
+            px(15, 2, 2, 2, OUTLINE),
+            px(6, 3, 12, 5, OUTLINE),
+            px(8, 2, 1, 2, hair.base),
+            px(12, 2, 2, 2, hair.base),
+            px(15, 3, 1, 2, hair.base),
+            px(7, 4, 10, 3, hair.base),
+            px(6, 5, 12, 2, hair.base),
+            px(12, 2, 1, 1, hair.highlight),
+            px(8, 4, 3, 1, hair.highlight),
+            px(7, 7, 2, 2, hair.base),
+            px(11, 7, 2, 1, hair.base),
+            px(15, 7, 2, 2, hair.base),
+          ].join('');
         case 'bun':
-          return `
-            <path d="M27 34 C29 17, 71 17, 73 34 C65 26, 35 26, 27 34 Z" fill="${color}" />
-          `;
+          return [
+            px(7, 3, 10, 2, OUTLINE),
+            px(6, 4, 12, 4, OUTLINE),
+            px(7, 4, 10, 3, hair.base),
+            px(8, 4, 4, 1, hair.highlight),
+            px(6, 6, 2, 3, hair.base),
+            px(16, 6, 2, 3, hair.base),
+            px(8, 7, 8, 1, hair.shadow),
+          ].join('');
         case 'curly':
-          return `
-            <circle cx="34" cy="21" r="9" fill="${color}" />
-            <circle cx="46" cy="18" r="10" fill="${color}" />
-            <circle cx="58" cy="19" r="10" fill="${color}" />
-            <circle cx="68" cy="23" r="8" fill="${color}" />
-          `;
+          return [
+            px(6, 2, 12, 3, OUTLINE),
+            px(5, 3, 14, 5, OUTLINE),
+            px(6, 3, 12, 4, hair.base),
+            px(7, 3, 3, 1, hair.highlight),
+            px(13, 3, 3, 1, hair.highlight),
+            px(6, 7, 3, 1, hair.base),
+            px(10, 7, 4, 1, hair.shadow),
+            px(15, 7, 3, 1, hair.base),
+            px(5, 6, 2, 4, hair.base),
+            px(17, 6, 2, 4, hair.base),
+          ].join('');
         case 'beanie':
-          return `
-            <path d="M25 33 C25 14, 75 14, 75 33 Z" fill="${color}" />
-            <rect x="23" y="29" width="54" height="8" rx="4" fill="${color}" filter="brightness(0.85)" />
-            <circle cx="50" cy="13" r="5" fill="${color}" />
-          `;
+          return [
+            px(10, 0, 4, 2, OUTLINE),
+            px(11, 1, 2, 1, hair.highlight),
+            px(7, 2, 10, 2, OUTLINE),
+            px(6, 3, 12, 5, OUTLINE),
+            px(7, 3, 10, 3, hair.base),
+            px(8, 3, 4, 1, hair.highlight),
+            px(5, 6, 14, 3, OUTLINE),
+            px(6, 6, 12, 2, hair.shadow),
+            px(7, 6, 2, 2, hair.base),
+            px(11, 6, 2, 2, hair.base),
+            px(15, 6, 2, 2, hair.base),
+          ].join('');
+        case 'cap':
+          return [
+            px(7, 2, 10, 2, OUTLINE),
+            px(6, 3, 12, 4, OUTLINE),
+            px(7, 3, 10, 3, hair.base),
+            px(8, 3, 4, 1, hair.highlight),
+            px(6, 6, 16, 2, OUTLINE),
+            px(7, 6, 14, 1, hair.shadow),
+            px(16, 6, 4, 1, hair.base),
+            px(6, 8, 2, 2, OUTLINE),
+          ].join('');
         default:
           return '';
       }
@@ -213,66 +296,121 @@
 
     function renderAccessory(acc) {
       if (acc === 'glasses') {
-        return `
-          <g stroke="#1e293b" stroke-width="2.4" fill="rgba(255,255,255,0.22)">
-            <circle cx="40" cy="43" r="6.5" />
-            <circle cx="60" cy="43" r="6.5" />
-            <line x1="46.5" y1="43" x2="53.5" y2="43" />
-          </g>
-        `;
+        return [
+          px(7, 9, 4, 1, OUTLINE),
+          px(13, 9, 4, 1, OUTLINE),
+          px(7, 12, 4, 1, OUTLINE),
+          px(13, 12, 4, 1, OUTLINE),
+          px(7, 10, 1, 2, OUTLINE),
+          px(10, 10, 1, 2, OUTLINE),
+          px(13, 10, 1, 2, OUTLINE),
+          px(16, 10, 1, 2, OUTLINE),
+          px(11, 10, 2, 1, OUTLINE),
+          px(8, 10, 2, 2, '#93C5FD', '0.28'),
+          px(14, 10, 2, 2, '#93C5FD', '0.28'),
+        ].join('');
+      }
+      if (acc === 'sunglasses') {
+        return [
+          px(6, 10, 12, 1, OUTLINE),
+          px(7, 10, 4, 2, '#0F172A'),
+          px(13, 10, 4, 2, '#0F172A'),
+          px(8, 10, 1, 1, '#FFFFFF', '0.8'),
+          px(14, 10, 1, 1, '#FFFFFF', '0.8'),
+        ].join('');
       }
       if (acc === 'headphones') {
-        return `
-          <g>
-            <path d="M23 42 C23 15, 77 15, 77 42" fill="none" stroke="#334155" stroke-width="4.5" stroke-linecap="round" />
-            <rect x="18" y="36" width="8" height="16" rx="4" fill="#ef4444" stroke="#1e293b" stroke-width="1.5" />
-            <rect x="74" y="36" width="8" height="16" rx="4" fill="#ef4444" stroke="#1e293b" stroke-width="1.5" />
-          </g>
-        `;
+        return [
+          px(7, 2, 10, 1, '#334155'),
+          px(6, 3, 2, 2, '#334155'),
+          px(16, 3, 2, 2, '#334155'),
+          px(5, 5, 1, 4, '#334155'),
+          px(18, 5, 1, 4, '#334155'),
+          px(3, 9, 3, 5, OUTLINE),
+          px(18, 9, 3, 5, OUTLINE),
+          px(4, 10, 2, 3, '#EF4444'),
+          px(18, 10, 2, 3, '#EF4444'),
+          px(4, 10, 1, 1, '#FCA5A5'),
+          px(19, 10, 1, 1, '#FCA5A5'),
+        ].join('');
       }
       if (acc === 'blush') {
-        return `
-          <ellipse cx="34" cy="49" rx="4.5" ry="2.5" fill="#fb7185" opacity="0.55" />
-          <ellipse cx="66" cy="49" rx="4.5" ry="2.5" fill="#fb7185" opacity="0.55" />
-        `;
+        return [
+          px(7, 12, 2, 1, '#FB7185', '0.75'),
+          px(15, 12, 2, 1, '#FB7185', '0.75'),
+        ].join('');
       }
       return '';
     }
 
     function createAvatarSVG(spec = randomSpec()) {
-      const { skin, hairColor, shirtColor, hairStyle, accessory } = spec;
+      const { skin, hair, shirt, hairStyle, accessory } = spec;
+
+      const body = [
+        // Gövde dış hat
+        px(6, 16, 12, 8, OUTLINE),
+        px(5, 17, 14, 7, OUTLINE),
+        // Sweatshirt / Tişört dolgu
+        px(6, 17, 12, 7, shirt.base),
+        // Yan gölgeler
+        px(6, 18, 2, 6, shirt.shadow),
+        px(16, 18, 2, 6, shirt.shadow),
+        // Yaka ve kapüşon ipi detayı
+        px(9, 17, 6, 1, shirt.accent),
+        px(10, 18, 4, 1, shirt.accent),
+        px(10, 19, 1, 3, shirt.accent, '0.85'),
+        px(13, 19, 1, 3, shirt.accent, '0.85'),
+        // Boyun
+        px(10, 15, 4, 2, skin.shadow),
+        px(10, 16, 4, 1, skin.base),
+      ].join('');
+
+      const head = [
+        // Kulaklar
+        px(5, 10, 2, 3, OUTLINE),
+        px(17, 10, 2, 3, OUTLINE),
+        px(6, 10, 1, 2, skin.base),
+        px(17, 10, 1, 2, skin.base),
+        px(6, 12, 1, 1, skin.shadow),
+        px(17, 12, 1, 1, skin.shadow),
+        // Kafa dış hat
+        px(7, 5, 10, 10, OUTLINE),
+        px(6, 6, 12, 8, OUTLINE),
+        px(8, 15, 8, 1, OUTLINE),
+        // Yüz dolgu
+        px(7, 6, 10, 8, skin.base),
+        px(8, 5, 8, 10, skin.base),
+        // Çene gölgesi
+        px(8, 14, 8, 1, skin.shadow),
+      ].join('');
+
+      const eyes = `
+        <g class="avatar-eyes">
+          ${px(8, 10, 2, 2, OUTLINE)}
+          ${px(14, 10, 2, 2, OUTLINE)}
+          ${px(9, 10, 1, 1, '#FFFFFF')}
+          ${px(15, 10, 1, 1, '#FFFFFF')}
+        </g>
+      `;
+
+      const mouth = `
+        <g class="avatar-mouth-idle">
+          ${px(10, 13, 4, 1, OUTLINE)}
+        </g>
+        <g class="avatar-mouth-talk">
+          ${px(10, 12, 4, 2, OUTLINE)}
+          ${px(11, 13, 2, 1, '#F472B6')}
+        </g>
+      `;
+
       return `
-        <svg class="avatar-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          ${renderHairBack(hairStyle, hairColor)}
-
-          <!-- Gövde / Sweatshirt -->
-          <path d="M20 96 C20 71, 32 63, 50 63 C68 63, 80 71, 80 96 Z" fill="${shirtColor}" stroke="#1e2233" stroke-width="2.5" />
-          <!-- Yaka detayı -->
-          <path d="M40 65 Q50 74 60 65" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="3" stroke-linecap="round" />
-          <!-- Boyun -->
-          <rect x="44" y="55" width="12" height="12" rx="5" fill="${skin}" />
-
-          <!-- Kulaklar -->
-          <circle cx="27" cy="44" r="5" fill="${skin}" />
-          <circle cx="73" cy="44" r="5" fill="${skin}" />
-
-          <!-- Kafa -->
-          <rect x="28" y="21" width="44" height="42" rx="20" fill="${skin}" stroke="#1e2233" stroke-width="2.2" />
-
-          <!-- Gözler -->
-          <g class="avatar-eyes">
-            <circle cx="40" cy="43" r="3.2" fill="#1e2233" />
-            <circle cx="60" cy="43" r="3.2" fill="#1e2233" />
-            <circle cx="41.1" cy="41.8" r="1.1" fill="#ffffff" />
-            <circle cx="61.1" cy="41.8" r="1.1" fill="#ffffff" />
-          </g>
-
-          <!-- Ağız (Normal gülümseme) -->
-          <path class="avatar-mouth-idle" d="M44 52 Q50 56.5 56 52" fill="none" stroke="#1e2233" stroke-width="2.3" stroke-linecap="round" />
-          <!-- Ağız (Konuşurken) -->
-          <ellipse class="avatar-mouth-talk" cx="50" cy="53" rx="4.2" ry="3.2" fill="#1e2233" />
-
-          ${renderHairFront(hairStyle, hairColor)}
+        <svg class="avatar-svg" viewBox="0 0 24 24" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          ${renderHairBack(hairStyle, hair)}
+          ${body}
+          ${head}
+          ${eyes}
+          ${mouth}
+          ${renderHairFront(hairStyle, hair)}
           ${renderAccessory(accessory)}
         </svg>
       `;
